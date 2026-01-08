@@ -2,7 +2,7 @@ import { AbsoluteFill, useCurrentFrame, useVideoConfig, interpolate } from 'remo
 import { LrcLine } from './utils/lrcParser';
 import { SvgText } from './SvgText';
 
-export const Subtitles: React.FC<{ lyrics: LrcLine[] }> = ({ lyrics }) => {
+export const SubtitlesPlanB: React.FC<{ lyrics: LrcLine[] }> = ({ lyrics }) => {
     const frame = useCurrentFrame();
     const { fps } = useVideoConfig();
     const currentTime = frame / fps;
@@ -61,41 +61,50 @@ export const Subtitles: React.FC<{ lyrics: LrcLine[] }> = ({ lyrics }) => {
     // Normal text base transform
     const baseTransform = `translateY(-50%) translateY(${translateY}px)`;
 
+    // Background darkening logic
+    // showSoraLayer handles both Sora and Ubae phase.
+    const darkOpacity = showSoraLayer ? 1 : 0;
+
     return (
         <AbsoluteFill>
-            {/* --- 1. The Giant "Sky" Layer (空なんて) --- */}
+            {/* --- BLACK BACKGROUND OVERLAY (z: 1) --- */}
+            <div
+                style={{
+                    position: 'absolute',
+                    top: 0, left: 0, width: '100%', height: '100%',
+                    backgroundColor: '#000000',
+                    opacity: darkOpacity,
+                    transition: 'opacity 1s ease-in-out',
+                    zIndex: 1, // Base layer for "Dark Mode"
+                }}
+            />
+
+            {/* --- 1. The Giant "Sky" Layer (空なんて) - PLAN B: BLURRED (z: 10) --- */}
             {showSoraLayer && (
                 <div
                     style={{
                         position: 'absolute',
-                        left: '50%',
-                        top: '50%',
+                        left: '50%', top: '50%',
                         transform: 'translate(-50%, -50%)',
                         fontFamily: "'A1 Mincho', serif",
-                        zIndex: 0, // Background
-                        width: '100%',
-                        height: '100%',
+                        zIndex: 10, // Above Black BG
+                        width: '100%', height: '100%',
                         overflow: 'visible',
                         opacity: isUbaeActive ? 0.3 : 1,
-                        transition: 'opacity 1s ease-in-out',
+                        filter: 'blur(8px)',
+                        transition: 'opacity 1s ease-in-out, filter 1s ease-in-out',
                     }}
                 >
-                    {/* Centered container for manual positioning of Sora chars */}
                     <div style={{ position: 'relative', width: '100%', height: '100%' }}>
                         {SORA_TEXT.split('').map((char, index) => {
                             const isSoraChar = char === '空';
                             const scale = isSoraChar ? 15 : 9;
+                            let x = 960; let y = 540;
+                            if (index === 0) { x = 960; y = 300; }
+                            if (index === 1) { x = 1500; y = 700; }
+                            if (index === 2) { x = 400; y = 800; }
+                            if (index === 3) { x = 1100; y = 900; }
 
-                            // Manual layout
-                            let x = 960;
-                            let y = 540;
-
-                            if (index === 0) { x = 960; y = 300; }  // 空 (Top Center)
-                            if (index === 1) { x = 1500; y = 700; } // な (Bottom Right)
-                            if (index === 2) { x = 400; y = 800; }  // ん (Bottom Left)
-                            if (index === 3) { x = 1100; y = 900; } // て (Bottom Center)
-
-                            // Drawing: Only animate if it's the first appearance (isSoraActive)
                             const drawProgress = isSoraActive
                                 ? interpolate(timeSinceStart, [0, 4], [0, 1], { extrapolateRight: 'clamp' })
                                 : 1;
@@ -124,27 +133,36 @@ export const Subtitles: React.FC<{ lyrics: LrcLine[] }> = ({ lyrics }) => {
                 </div>
             )}
 
-            {/* --- 2. The "Ground" Layer (奪えなくていい) --- */}
+            {/* --- 2. The "Ground" Layer (奪えなくていい) - PLAN B: SOLID + BLEED + SCALE (z: 20) --- */}
             {isUbaeActive && (
                 <div
                     style={{
                         position: 'absolute',
-                        left: '150px',
-                        bottom: '150px',
+                        left: '150px', bottom: '150px',
                         fontFamily: "'A1 Mincho', serif",
-                        zIndex: 10, // Foreground
-                        writingMode: 'vertical-rl',
-                        textOrientation: 'upright',
+                        zIndex: 20, // Above Sora
+                        writingMode: 'vertical-rl', textOrientation: 'upright',
                         whiteSpace: 'nowrap',
                     }}
                 >
                     {UBAE_TEXT.split('').map((char, index) => {
-                        // Ink Bleed / Fade In
                         const delay = index * 0.15;
                         const bleedProgress = interpolate(
                             timeSinceStart,
-                            [delay, delay + 1.0],
+                            [delay, delay + 1.2],
                             [0, 1],
+                            { extrapolateLeft: 'clamp', extrapolateRight: 'clamp' }
+                        );
+                        const swell = interpolate(
+                            bleedProgress,
+                            [0, 1],
+                            [0.9, 1.05],
+                            { extrapolateLeft: 'clamp', extrapolateRight: 'clamp' }
+                        );
+                        const focus = interpolate(
+                            bleedProgress,
+                            [0, 0.6],
+                            [10, 0],
                             { extrapolateLeft: 'clamp', extrapolateRight: 'clamp' }
                         );
 
@@ -154,6 +172,9 @@ export const Subtitles: React.FC<{ lyrics: LrcLine[] }> = ({ lyrics }) => {
                                 style={{
                                     display: 'inline-block',
                                     marginBottom: '15px',
+                                    transform: `scale(${swell})`,
+                                    filter: `blur(${focus}px)`,
+                                    transformOrigin: 'center center',
                                 }}
                             >
                                 <SvgText
@@ -161,7 +182,7 @@ export const Subtitles: React.FC<{ lyrics: LrcLine[] }> = ({ lyrics }) => {
                                     fontSize={48}
                                     progress={bleedProgress}
                                     color="#FFFDF8"
-                                    strokeWidth={0} // Fill only (simulated)
+                                    strokeWidth={0} // Fill only
                                 />
                             </div>
                         );
@@ -169,26 +190,20 @@ export const Subtitles: React.FC<{ lyrics: LrcLine[] }> = ({ lyrics }) => {
                 </div>
             )}
 
-            {/* --- 3. Normal Text Layer --- */}
+            {/* --- 3. Normal Text Layer (z: 30) --- */}
             {showNormalText && (
                 <div
                     style={{
                         position: 'absolute',
-                        left: '1650px',
-                        top: '50%',
+                        left: '1650px', top: '50%',
                         transform: baseTransform,
-                        fontFamily: "'A1 Mincho', serif",
-                        fontSize: '50px',
-                        fontWeight: 500,
-                        color: '#FFFDF8',
+                        fontFamily: "'A1 Mincho', serif", fontSize: '50px',
+                        fontWeight: 500, color: '#FFFDF8',
                         textShadow: '2px 2px 10px rgba(0,0,0,0.8)',
-                        textAlign: 'center',
-                        opacity,
-                        writingMode: 'vertical-rl',
-                        textOrientation: 'upright',
-                        letterSpacing: '0.2em',
-                        whiteSpace: 'nowrap',
-                        zIndex: 1,
+                        textAlign: 'center', opacity,
+                        writingMode: 'vertical-rl', textOrientation: 'upright',
+                        letterSpacing: '0.2em', whiteSpace: 'nowrap',
+                        zIndex: 30, // Topmost
                     }}
                 >
                     {currentLyric.text}
