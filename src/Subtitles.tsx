@@ -91,7 +91,7 @@ export const Subtitles: React.FC<{ lyrics: LrcLine[] }> = ({ lyrics }) => {
                 if (isHitoe) {
                     rightPos = 'auto';
                     topPos = '50%';
-                    // left is handled in style override
+                    // left is handled in style override below
                 } else if (isSora) {
                     // Sora Position: Reset to Right 9% (Grid 18), Move UP (Top 30%)
                     rightPos = '9%';
@@ -99,9 +99,15 @@ export const Subtitles: React.FC<{ lyrics: LrcLine[] }> = ({ lyrics }) => {
                 } else if (!isSora && prevLyric && prevLyric.text.includes("空なんて")) {
                     // This is the line AFTER Sora.
                     // Position: Shift More Right to 16 line (approx Right 14%)
-                    // Start: Shift Down to align with "Na" (Top 45%)
+                    // Start: Fixed Start Position (Top Aligned at 35%)
                     rightPos = '14%';
-                    topPos = '45%';
+                    topPos = '35%';
+
+                    if (item.line.text.includes("分けなくていい")) {
+                        topPos = '28%';
+                    }
+
+                    transform = 'translate(50%, 0)'; // Aligns top of text to topPos
                 } else {
                     // Standard lines (Grid 18 approx Right 9%)
                     rightPos = '9%';

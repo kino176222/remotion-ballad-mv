@@ -26,7 +26,7 @@ export const MyComposition = () => {
     return (
         <AbsoluteFill className="bg-gray-100 items-center justify-center">
             <Video
-                src={staticFile('video.mp4')}
+                src={staticFile('video2.mp4')}
                 style={{ width: '100%', height: '100%', objectFit: 'cover' }}
             />
             {lyrics.length > 0 && <Subtitles lyrics={lyrics} />}
