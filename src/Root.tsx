@@ -17,7 +17,7 @@ export const RemotionRoot: React.FC = () => {
       <Composition
         id="MyComp"
         component={MyComposition}
-        durationInFrames={9300}
+        durationInFrames={9600}
         fps={30}
         width={1920}
         height={1080}
@@ -25,7 +25,7 @@ export const RemotionRoot: React.FC = () => {
       <Composition
         id="MyComp-PlanB"
         component={MyCompositionPlanB}
-        durationInFrames={9300}
+        durationInFrames={9600}
         fps={30}
         width={1920}
         height={1080}
@@ -33,7 +33,7 @@ export const RemotionRoot: React.FC = () => {
       <Composition
         id="MyComp-PlanC"
         component={MyCompositionPlanC}
-        durationInFrames={9300}
+        durationInFrames={9600}
         fps={30}
         width={1920}
         height={1080}
@@ -41,7 +41,7 @@ export const RemotionRoot: React.FC = () => {
       <Composition
         id="MyComp-PlanD"
         component={MyCompositionPlanD}
-        durationInFrames={9300}
+        durationInFrames={9600}
         fps={30}
         width={1920}
         height={1080}
@@ -49,7 +49,7 @@ export const RemotionRoot: React.FC = () => {
       <Composition
         id="MyComp-PlanE"
         component={MyCompositionPlanE}
-        durationInFrames={9300}
+        durationInFrames={9600}
         fps={30}
         width={1920}
         height={1080}
@@ -57,7 +57,7 @@ export const RemotionRoot: React.FC = () => {
       <Composition
         id="MyComp-PlanF"
         component={MyCompositionPlanF}
-        durationInFrames={9300}
+        durationInFrames={9600}
         fps={30}
         width={1920}
         height={1080}
@@ -65,7 +65,7 @@ export const RemotionRoot: React.FC = () => {
       <Composition
         id="MyComp-PlanG"
         component={MyCompositionPlanG}
-        durationInFrames={9300}
+        durationInFrames={9600}
         fps={30}
         width={1920}
         height={1080}
@@ -73,7 +73,7 @@ export const RemotionRoot: React.FC = () => {
       <Composition
         id="MyComp-PlanH"
         component={MyCompositionPlanH}
-        durationInFrames={9300}
+        durationInFrames={9600}
         fps={30}
         width={1920}
         height={1080}
@@ -93,7 +93,7 @@ export const RemotionRoot: React.FC = () => {
       <Composition
         id="MyComp-PlanI"
         component={MyCompositionPlanI}
-        durationInFrames={9300}
+        durationInFrames={9600}
         fps={30}
         width={1920}
         height={1080}

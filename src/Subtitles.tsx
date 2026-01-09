@@ -114,6 +114,9 @@ export const Subtitles: React.FC<{ lyrics: LrcLine[] }> = ({ lyrics }) => {
                     topPos = '50%';
                 }
 
+                const isSoraPair = isSora || (!isSora && prevLyric && prevLyric.text.includes("空なんて")) || item.line.text.includes("祈るように叫ぶ");
+                const textColor = isSoraPair ? '#D4D4D8' : '#878B8E';
+
                 const style: React.CSSProperties = {
                     position: 'absolute',
                     top: topPos,
@@ -121,7 +124,7 @@ export const Subtitles: React.FC<{ lyrics: LrcLine[] }> = ({ lyrics }) => {
                     transform: transform,
                     fontFamily: "'A1 Mincho', serif",
                     fontSize: '60px',
-                    color: '#D4D4D8',
+                    color: textColor,
                     opacity,
                     writingMode: 'vertical-rl',
                     textOrientation: 'upright',
