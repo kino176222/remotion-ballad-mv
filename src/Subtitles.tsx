@@ -66,12 +66,13 @@ export const Subtitles: React.FC<{ lyrics: LrcLine[] }> = ({ lyrics }) => {
             {activeLines.map((item) => {
                 const isSora = item.line.text.includes("空なんて");
                 const isHitoe = item.line.text.includes("ひとへ");
+                const isSoftFade = isHitoe || item.line.text.includes("歩き出した");
 
                 // Calculate individual opacity
                 const duration = item.endTime - item.line.time;
                 const timeSinceStart = currentTime - item.line.time;
 
-                const fadeOutOffset = (isHitoe) ? 1.5 : 0.2;
+                const fadeOutOffset = (isSoftFade) ? 1.5 : 0.2;
 
                 // Recalculate p2 based on dynamic duration
                 const p1 = Math.min(1, duration * 0.4);
