@@ -1,20 +1,17 @@
 import { AbsoluteFill, useCurrentFrame, useVideoConfig, interpolate } from 'remotion';
 import { LrcLine } from './utils/lrcParser';
-import { SvgText } from './SvgText';
 
 export const Subtitles: React.FC<{ lyrics: LrcLine[] }> = ({ lyrics }) => {
     const frame = useCurrentFrame();
     const { fps } = useVideoConfig();
     const currentTime = frame / fps;
 
-    // Find the current lyric
     const currentLyricIndex = lyrics.findIndex((line, index) => {
         const nextLine = lyrics[index + 1];
-        if (!nextLine) return true; // It's the last line
+        if (!nextLine) return true;
         return currentTime >= line.time && currentTime < nextLine.time;
     });
 
-    // Handle cases before first lyric
     if (currentLyricIndex === -1 || currentTime < lyrics[0].time) {
         return null;
     }
@@ -22,178 +19,55 @@ export const Subtitles: React.FC<{ lyrics: LrcLine[] }> = ({ lyrics }) => {
     const currentLyric = lyrics[currentLyricIndex];
     const nextLyric = lyrics[currentLyricIndex + 1];
 
-    // Animation logic
     const timeSinceStart = currentTime - currentLyric.time;
     const duration = nextLyric ? nextLyric.time - currentLyric.time : 5;
 
-    // Fade logic (for normal text)
-    const FADE_TIME = 1;
-    const fadeInEnd = Math.min(FADE_TIME, duration * 0.4);
-    const fadeOutStart = Math.max(duration - FADE_TIME, duration * 0.6);
+    const isHitoe = currentLyric.text.includes("ひとへ");
 
-    const opacity = interpolate(
-        timeSinceStart,
-        [0, fadeInEnd, fadeOutStart, duration],
-        [0, 1, 1, 0],
-        { extrapolateLeft: 'clamp', extrapolateRight: 'clamp' }
+    // Simplified styling: Vertical, Muted Color, Consistent Size
+    // Fix: strictly monotonically increasing check
+    const opacity = interpolate(timeSinceStart,
+        (() => {
+            const p1 = Math.min(1, duration * 0.4);
+            const p3 = duration;
+
+            // "Hitoe" fades out gently (fluffy), others cut sharply
+            const fadeOutStartOffset = isHitoe ? 1.5 : 0.2;
+
+            // Ensure p2 is greater than p1
+            const p2 = Math.max(p1 + 0.01, duration - fadeOutStartOffset);
+            if (p2 >= p3) {
+                // If duration is too short, just do a simple fade in/out or skip logic
+                return [0, p1, p3 - 0.01, p3];
+            }
+            return [0, p1, p2, p3];
+        })(),
+        [0, 1, 1, 0]
     );
-    const translateY = interpolate(
-        timeSinceStart,
-        [0, 1],
-        [10, 0],
-        { extrapolateLeft: 'clamp', extrapolateRight: 'clamp' }
-    );
-
-    // Identify special phases
-    const SORA_TEXT = "空なんて";
-    const UBAE_TEXT = "奪えなくていい";
-
-    // Check if we are in the "Sora" phase (Active or Ghost)
-    const isSoraActive = currentLyric.text.includes(SORA_TEXT);
-    const isUbaeActive = currentLyric.text.includes(UBAE_TEXT);
-
-    // Show Sora layer if it's the current line OR if Ubae is the current line (as background)
-    const showSoraLayer = isSoraActive || isUbaeActive;
-
-    // Show Normal Text only if NO special layers are active
-    const showNormalText = !isSoraActive && !isUbaeActive;
-
-    // Normal text base transform
-    const baseTransform = `translateY(-50%) translateY(${translateY}px)`;
 
     return (
         <AbsoluteFill>
-            {/* --- 1. The Giant "Sky" Layer (空なんて) --- */}
-            {showSoraLayer && (
-                <div
-                    style={{
-                        position: 'absolute',
-                        left: '50%',
-                        top: '50%',
-                        transform: 'translate(-50%, -50%)',
-                        fontFamily: "'A1 Mincho', serif",
-                        zIndex: 0, // Background
-                        width: '100%',
-                        height: '100%',
-                        overflow: 'visible',
-                        opacity: isUbaeActive ? 0.3 : 1,
-                        transition: 'opacity 1s ease-in-out',
-                    }}
-                >
-                    {/* Centered container for manual positioning of Sora chars */}
-                    <div style={{ position: 'relative', width: '100%', height: '100%' }}>
-                        {SORA_TEXT.split('').map((char, index) => {
-                            const isSoraChar = char === '空';
-                            const scale = isSoraChar ? 15 : 9;
-
-                            // Manual layout
-                            let x = 960;
-                            let y = 540;
-
-                            if (index === 0) { x = 960; y = 300; }  // 空 (Top Center)
-                            if (index === 1) { x = 1500; y = 700; } // な (Bottom Right)
-                            if (index === 2) { x = 400; y = 800; }  // ん (Bottom Left)
-                            if (index === 3) { x = 1100; y = 900; } // て (Bottom Center)
-
-                            // Drawing: Only animate if it's the first appearance (isSoraActive)
-                            const drawProgress = isSoraActive
-                                ? interpolate(timeSinceStart, [0, 4], [0, 1], { extrapolateRight: 'clamp' })
-                                : 1;
-
-                            return (
-                                <div
-                                    key={`sora-${index}`}
-                                    style={{
-                                        position: 'absolute',
-                                        left: 0, top: 0,
-                                        transform: `translate(${x}px, ${y}px) translate(-50%, -50%) scale(${scale})`,
-                                    }}
-                                >
-                                    <SvgText
-                                        text={char}
-                                        fontSize={50}
-                                        progress={drawProgress}
-                                        color="#FFFDF8"
-                                        strokeWidth={1}
-                                        style={{ opacity: 0.8 }}
-                                    />
-                                </div>
-                            );
-                        })}
-                    </div>
-                </div>
-            )}
-
-            {/* --- 2. The "Ground" Layer (奪えなくていい) --- */}
-            {isUbaeActive && (
-                <div
-                    style={{
-                        position: 'absolute',
-                        left: '150px',
-                        bottom: '150px',
-                        fontFamily: "'A1 Mincho', serif",
-                        zIndex: 10, // Foreground
-                        writingMode: 'vertical-rl',
-                        textOrientation: 'upright',
-                        whiteSpace: 'nowrap',
-                    }}
-                >
-                    {UBAE_TEXT.split('').map((char, index) => {
-                        // Ink Bleed / Fade In
-                        const delay = index * 0.15;
-                        const bleedProgress = interpolate(
-                            timeSinceStart,
-                            [delay, delay + 1.0],
-                            [0, 1],
-                            { extrapolateLeft: 'clamp', extrapolateRight: 'clamp' }
-                        );
-
-                        return (
-                            <div
-                                key={`ubae-${index}`}
-                                style={{
-                                    display: 'inline-block',
-                                    marginBottom: '15px',
-                                }}
-                            >
-                                <SvgText
-                                    text={char}
-                                    fontSize={48}
-                                    progress={bleedProgress}
-                                    color="#FFFDF8"
-                                    strokeWidth={0} // Fill only (simulated)
-                                />
-                            </div>
-                        );
-                    })}
-                </div>
-            )}
-
-            {/* --- 3. Normal Text Layer --- */}
-            {showNormalText && (
-                <div
-                    style={{
-                        position: 'absolute',
-                        left: '1650px',
-                        top: '50%',
-                        transform: baseTransform,
-                        fontFamily: "'A1 Mincho', serif",
-                        fontSize: '50px',
-                        fontWeight: 500,
-                        color: '#FFFDF8',
-                        textShadow: '2px 2px 10px rgba(0,0,0,0.8)',
-                        textAlign: 'center',
-                        opacity,
-                        writingMode: 'vertical-rl',
-                        textOrientation: 'upright',
-                        letterSpacing: '0.2em',
-                        whiteSpace: 'nowrap',
-                        zIndex: 1,
-                    }}
-                >
-                    {currentLyric.text}
-                </div>
-            )}
-        </AbsoluteFill >
+            <div
+                style={{
+                    position: 'absolute',
+                    top: '50%',
+                    right: isHitoe ? 'auto' : '9%', // Shifted further right (approx Grid 18)
+                    left: isHitoe ? '50%' : 'auto',
+                    transform: isHitoe ? 'translate(-50%, -50%)' : 'translate(50%, -50%)',
+                    fontFamily: "'A1 Mincho', serif",
+                    fontSize: '60px',
+                    color: '#D4D4D8',
+                    opacity,
+                    writingMode: 'vertical-rl',
+                    textOrientation: 'upright',
+                    letterSpacing: '0.2em',
+                    whiteSpace: 'nowrap',
+                    textShadow: '0px 0px 10px rgba(0,0,0,0.5)',
+                    textAlign: 'center',
+                }}
+            >
+                {currentLyric.text}
+            </div>
+        </AbsoluteFill>
     );
 };

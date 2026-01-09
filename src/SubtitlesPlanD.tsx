@@ -26,7 +26,12 @@ export const SubtitlesPlanD: React.FC<{ lyrics: LrcLine[] }> = ({ lyrics }) => {
     const duration = nextLyric ? nextLyric.time - currentLyric.time : 5;
 
     // Fade logic helpers
-    const getOpacity = (t: number, d: number) => interpolate(t, [0, 1, d - 1, d], [0, 1, 1, 0], { extrapolateLeft: 'clamp', extrapolateRight: 'clamp' });
+    const getOpacity = (t: number, d: number) => interpolate(
+        t,
+        [0, 1, Math.max(1, d - 1), d],
+        [0, 1, 1, 0],
+        { extrapolateLeft: 'clamp', extrapolateRight: 'clamp' }
+    );
 
     // Identify special phases
     const SORA_TEXT = "空なんて";

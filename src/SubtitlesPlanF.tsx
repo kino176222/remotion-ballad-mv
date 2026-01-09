@@ -23,7 +23,12 @@ export const SubtitlesPlanF: React.FC<{ lyrics: LrcLine[] }> = ({ lyrics }) => {
     const timeSinceStart = currentTime - currentLyric.time;
     const duration = nextLyric ? nextLyric.time - currentLyric.time : 5;
 
-    const getOpacity = (t: number, d: number) => interpolate(t, [0, 0.5, d - 0.5, d], [0, 1, 1, 0], { extrapolateLeft: 'clamp', extrapolateRight: 'clamp' });
+    const getOpacity = (t: number, d: number) => interpolate(
+        t,
+        [0, 0.5, Math.max(0.5, d - 0.5), d],
+        [0, 1, 1, 0],
+        { extrapolateLeft: 'clamp', extrapolateRight: 'clamp' }
+    );
     const opacity = getOpacity(timeSinceStart, duration);
 
     const SORA_TEXT = "空なんて";
